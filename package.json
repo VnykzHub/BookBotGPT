@@ -1,0 +1,28 @@
+{
+    "name": "intelligent-book-recommendation-bot",
+    "version": "1.0.0",
+    "description": "An intelligent book recommendation bot using Azure AI services",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js",
+      "dev": "nodemon app.js"
+    },
+    "keywords": [
+      "azure",
+      "openai",
+      "book",
+      "recommendations",
+      "bot"
+    ],
+    "author": "Vinayak Mathur",
+    "license": "MIT",
+    "dependencies": {
+      "axios": "^1.6.2",
+      "dotenv": "^16.3.1",
+      "express": "^4.18.2",
+      "openai": "^4.20.0"
+    },
+    "devDependencies": {
+      "nodemon": "^3.0.1"
+    }
+  }

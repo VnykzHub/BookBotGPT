@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIG788 - Intelligent Book Recommendation Bot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3c6e71;
+            --secondary-color: #284b63;
+            --accent-color: #d9d9d9;
+            --text-color: #333;
+            --light-bg: #f5f5f5;
+            --user-message-bg: #e1f5fe;
+            --bot-message-bg: #f0f4c3;
+            --border-radius: 10px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        
+        .sidebar {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .student-info {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .student-info h2 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .student-info p {
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+            opacity: 0.9;
+        }
+        
+        .project-info {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .project-info h2 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .feature-list {
+            list-style-type: none;
+        }
+        
+        .feature-list li {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        
+        .feature-list i {
+            margin-right: 8px;
+            color: #8bc34a;
+        }
+        
+        .system-stats {
+            margin-top: auto;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        #chatbox {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background-color: var(--accent-color);
+        }
+        
+        #userInput {
+            flex-grow: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+        
+        button {
+            padding: 0 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        #voiceInput {
+            background-color: #e74c3c;
+        }
+        
+        #voiceInput.recording {
+            background-color: #c0392b;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background-color: var(--user-message-bg);
+            padding: 12px 15px;
+            border-radius: 18px 18px 0 18px;
+            max-width: 80%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background-color: var(--bot-message-bg);
+            padding: 12px 15px;
+            border-radius: 18px 18px 18px 0;
+            max-width: 80%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        /* Added styles for markdown content */
+        .bot-message a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        
+        .bot-message a:hover {
+            text-decoration: underline;
+        }
+        
+        .bot-message strong, .bot-message b {
+            font-weight: bold;
+        }
+        
+        .bot-message em, .bot-message i {
+            font-style: italic;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: #e0e0e0;
+            padding: 15px;
+            border-radius: 18px;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #777;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: typing 1s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-right: 0;
+        }
+        
+        .api-indicator {
+            font-size: 12px;
+            color: #888;
+            align-self: flex-start;
+            margin-top: -5px;
+            margin-left: 15px;
+            font-style: italic;
+        }
+        
+        #speech-feedback {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: none;
+        }
+        
+        @keyframes typing {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="student-info">
+                <h2>Student Information</h2>
+                <p><strong>Name:</strong> Vinayak Mathur</p>
+                <p><strong>ID:</strong> 225170845</p>
+                <p><strong>Course:</strong> SIG788</p>
+                <p><strong>Assignment:</strong> Engineering AI Solutions</p>
+            </div>
+            
+            <div class="project-info">
+                <h2>Book Recommendation Bot</h2>
+                <p>This intelligent bot leverages Azure OpenAI and Google Books API to provide personalized book recommendations.</p>
+                <br>
+                <h3>Features:</h3>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check-circle"></i> Natural language processing</li>
+                    <li><i class="fas fa-check-circle"></i> Voice input capability</li>
+                    <li><i class="fas fa-check-circle"></i> Personalized recommendations</li>
+                    <li><i class="fas fa-check-circle"></i> Book search integration</li>
+                    <li><i class="fas fa-check-circle"></i> Conversational AI</li>
+                </ul>
+            </div>
+            
+            <div class="system-stats">
+                <p>Powered by:</p>
+                <p>- Azure OpenAI Service</p>
+                <p>- Google Books API</p>
+                <p>- Azure Speech Services</p>
+            </div>
+        </div>
+        
+        <div class="chat-container">
+            <div class="chat-header">
+                <i class="fas fa-book"></i> Intelligent Book Recommendation Assistant
+            </div>
+            <div id="chatbox"></div>
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="Ask for book recommendations...">
+                <button id="send"><i class="fas fa-paper-plane"></i></button>
+                <button id="voiceInput"><i class="fas fa-microphone"></i></button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Speech feedback element -->
+    <div id="speech-feedback">Listening...</div>
+
+    <script>
+        // Generate unique user ID
+        const userId = 'user-' + Math.random().toString(36).substring(2, 15);
+        
+        const chatbox = document.getElementById('chatbox');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('send');
+        const voiceButton = document.getElementById('voiceInput');
+        const speechFeedback = document.getElementById('speech-feedback');
+        
+        // Configure marked.js to allow links to open in new tab
+        marked.setOptions({
+            renderer: new marked.Renderer(),
+            gfm: true,
+            breaks: true
+        });
+        
+        // Override link renderer to add target="_blank"
+        const renderer = new marked.Renderer();
+        const originalLinkRenderer = renderer.link;
+        renderer.link = function(href, title, text) {
+            const link = originalLinkRenderer.call(this, href, title, text);
+            return link.replace('<a ', '<a target="_blank" rel="noopener noreferrer" ');
+        };
+        marked.setOptions({ renderer });
+        
+        // Add initial bot message
+        addBotMessage("Hello! I'm your book recommendation assistant. Tell me what kind of books you enjoy, or ask for recommendations based on author, genre, or mood.");
+        
+        // Send message when button is clicked
+        sendButton.addEventListener('click', sendMessage);
+        
+        // Send message when Enter key is pressed
+        userInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Voice input
+        voiceButton.addEventListener('click', toggleVoiceInput);
+        
+        // Variable to track if recording is active
+        let isRecording = false;
+        let recognition = null;
+        
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (message) {
+                addUserMessage(message);
+                fetchBotResponse(message);
+                userInput.value = '';
+            }
+        }
+        
+        function addUserMessage(message) {
+            const div = document.createElement('div');
+            div.className = 'user-message';
+            div.textContent = message;
+            chatbox.appendChild(div);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+        
+        function addBotMessage(message, isHtml = false) {
+            const div = document.createElement('div');
+            div.className = 'bot-message';
+            
+            if (isHtml) {
+                // Parse markdown to HTML and set as innerHTML
+                div.innerHTML = marked.parse(message);
+            } else {
+                div.textContent = message;
+            }
+            
+            chatbox.appendChild(div);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+        
+        function fetchBotResponse(message) {
+            // Show typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            chatbox.appendChild(typingDiv);
+            
+            // Send request to bot API
+            fetch('/api/messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    type: 'message',
+                    text: message,
+                    userId: userId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove typing indicator
+                chatbox.removeChild(typingDiv);
+                
+                // Add bot response with HTML support if needed
+                addBotMessage(data.text, data.html);
+                
+                // Show source indicator if using Google Books API
+                if (data.source === 'google_books_api') {
+                    console.log('📚 Response includes Google Books API data');
+                    
+                    const sourceIndicator = document.createElement('div');
+                    sourceIndicator.className = 'api-indicator';
+                    sourceIndicator.innerHTML = '<i class="fas fa-book"></i> Powered by Google Books API';
+                    chatbox.appendChild(sourceIndicator);
+                }
+            })
+            .catch(error => {
+                // Remove typing indicator
+                chatbox.removeChild(typingDiv);
+                
+                // Show error message
+                addBotMessage('Sorry, I encountered an error. Please try again.');
+                console.error('Error:', error);
+            });
+        }
+        
+        function toggleVoiceInput() {
+            if (isRecording) {
+                // Stop recording
+                stopRecording();
+            } else {
+                // Start recording
+                startRecording();
+            }
+        }
+        
+        function startRecording() {
+            // Check if browser supports speech recognition
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                addBotMessage('Sorry, your browser does not support voice recognition. Please try using Chrome or Edge.');
+                return;
+            }
+            
+            // Create SpeechRecognition object
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            
+            // Configure recognition
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            
+            // Show recording state
+            isRecording = true;
+            voiceButton.classList.add('recording');
+            voiceButton.innerHTML = '<i class="fas fa-stop"></i>';
+            speechFeedback.style.display = 'block';
+            speechFeedback.textContent = 'Listening...';
+            
+            // Start recognition
+            recognition.start();
+            
+            let finalTranscript = '';
+            let interimTranscript = '';
+            
+            recognition.onresult = function(event) {
+                interimTranscript = '';
+                
+                // Process results
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript + ' ';
+                        userInput.value = finalTranscript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                        speechFeedback.textContent = 'Listening: ' + interimTranscript;
+                    }
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                
+                if (event.error !== 'aborted') {
+                    stopRecording();
+                    
+                    const errorMessages = {
+                        'no-speech': 'No speech was detected. Please try again.',
+                        'audio-capture': 'There was an issue with your microphone. Please check your settings.',
+                        'network': 'A network error occurred. Please check your connection.',
+                        'not-allowed': 'Microphone access was denied. Please allow microphone access to use voice input.',
+                        'service-not-allowed': 'The speech recognition service is not allowed. Please try again later.'
+                    };
+                    
+                    const errorMessage = errorMessages[event.error] || 'An error occurred with voice recognition. Please try again.';
+                    addBotMessage(errorMessage);
+                }
+            };
+        }
+        
+        function stopRecording() {
+            if (recognition) {
+                recognition.stop();
+            }
+            
+            isRecording = false;
+            voiceButton.classList.remove('recording');
+            voiceButton.innerHTML = '<i class="fas fa-microphone"></i>';
+            speechFeedback.style.display = 'none';
+            
+            // Note: We don't auto-send the message
+            // The user can review the transcription and send when ready
+        }
+    </script>
+</body>
+</html>
